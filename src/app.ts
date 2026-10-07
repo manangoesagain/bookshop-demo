@@ -1,5 +1,5 @@
 import express from "express";
-import { listBooks } from "./books";
+import { getBookByIsbn, listBooks, normalizeIsbn } from "./books";
 import { getUserOrders } from "./orders";
 import { getUser, toUserResponse } from "./users";
 
@@ -8,6 +8,20 @@ app.use(express.json());
 
 app.get("/v1/books", async (_req, res) => {
   res.json(await listBooks());
+});
+
+app.get("/v1/books/:isbn", async (req, res) => {
+  const isbn = normalizeIsbn(req.params.isbn);
+  if (!isbn) {
+    res.status(400).json({ error: "ISBN must be 13 digits" });
+    return;
+  }
+  const book = await getBookByIsbn(isbn);
+  if (!book) {
+    res.status(404).json({ error: "Book not found" });
+    return;
+  }
+  res.json(book);
 });
 
 app.get("/v1/orders", async (req, res) => {
