@@ -13,5 +13,5 @@ export async function getUser(id: number): Promise<User | undefined> {
 
 // What the API sends back for a user. Email stays private.
 export function toUserResponse(u: User) {
-  return { id: u.id, name: u.name };
+  return { user: { id: u.id, fullName: u.name } };
 }
