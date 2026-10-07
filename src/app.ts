@@ -1,6 +1,7 @@
 import express from "express";
 import { listBooks } from "./books";
 import { getUserOrders } from "./orders";
+import { searchOrders } from "./search";
 import { getUser, toUserResponse } from "./users";
 
 export const app = express();
@@ -17,6 +18,11 @@ app.get("/v1/orders", async (req, res) => {
     return;
   }
   res.json(await getUserOrders(userId));
+});
+
+app.get("/v2/orders/search", async (req, res) => {
+  const q = String(req.query.q ?? "");
+  res.json(await searchOrders(q));
 });
 
 app.get("/v1/users/:id", async (req, res) => {

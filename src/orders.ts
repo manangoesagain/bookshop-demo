@@ -13,17 +13,19 @@ export interface Order {
   items: OrderItem[];
 }
 
-// One query for the orders and their items, grouped per order.
+// Simpler to read: load the orders, then each order's items.
 export async function getUserOrders(userId: number): Promise<Order[]> {
-  const rows = (await db.query(
-    `SELECT o.id, o.user_id AS userId, o.title, o.total,
-            json_group_array(json_object('bookId', i.book_id, 'qty', i.qty)) AS items
-       FROM orders o
-       LEFT JOIN order_items i ON i.order_id = o.id
-      WHERE o.user_id = ?
-      GROUP BY o.id`,
+  const orders = (await db.query(
+    "SELECT id, user_id AS userId, title, total FROM orders WHERE user_id = ?",
     [userId]
-  )) as Array<Omit<Order, "items"> & { items: string }>;
+  )) as Order[];
 
-  return rows.map((row) => ({ ...row, items: JSON.parse(row.items) }));
+  for (const order of orders) {
+    order.items = (await db.query(
+      "SELECT book_id AS bookId, qty FROM order_items WHERE order_id = ?",
+      [order.id]
+    )) as OrderItem[];
+  }
+
+  return orders;
 }
